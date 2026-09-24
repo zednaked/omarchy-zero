@@ -88,6 +88,16 @@ Fora de propósito: `ttfx` (screensaver, só no AUR/repo deles), `hypridle`,
 12. **Splash (opcional)**: `plymouth` no `HOOKS` depois de `systemd`, e
     `splash` no cmdline.
 
+## Instalador
+
+**Decidido em 24/09:** um script bash com `--dry-run`, no mesmo estilo do
+omarchy-guest.
+- Roda como usuário e pede `sudo` em cada ação de root, uma de cada vez, para
+  que o `--dry-run` mostre exatamente o que vai rodar como root.
+- Pode rodar de novo sem estragar nada, então também conserta uma máquina que
+  ficou pela metade.
+- Faz backup com data e hora antes de sobrescrever qualquer arquivo.
+
 ## Relação com o omarchy-guest
 
 O `omarchy-guest` resolve "Omarchy **em cima** de um host" (HyDE etc.). Este
@@ -104,7 +114,6 @@ instalação.
 
 ## Perguntas em aberto
 
-- Instalador em bash, idempotente, com `--dry-run`, como o `omarchy-guest`?
 - Dolphin, sddm e plymouth ficam como opcionais ou saem de vez?
 - `sudo` com `secure_path` fura a trava. Vale fechar isso?
 - Tema do sddm: o astronaut é AUR. Usar o tema do próprio Omarchy
