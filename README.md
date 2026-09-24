@@ -92,12 +92,18 @@ Fora de propósito: `ttfx` (screensaver, só no AUR/repo deles), `hypridle`,
 
 O `omarchy-guest` resolve "Omarchy **em cima** de um host" (HyDE etc.). Este
 resolve "Omarchy **sem** host". Muita coisa é compartilhada: trava, doctor,
-contract, migrations, menu. A decidir: repo separado que depende dele, ou um
-modo `--no-host` dentro dele.
+contract, migrations, menu.
+
+**Decidido em 24/09: repositório próprio, que usa o omarchy-guest.** O
+instalador daqui baixa o omarchy-guest e chama as peças dele. A regra é: o que
+vale para as duas situações (com host e sem host) vai para o omarchy-guest,
+como a trava do atualizador, as dependências a mais no `doctor` e um
+`bootstrap --minimal`. Aqui fica só o que é exclusivo da máquina sem host: os
+três arquivos de ambiente, a sessão, os padrões de máquina e a ordem de
+instalação.
 
 ## Perguntas em aberto
 
-- Repo próprio ou modo do `omarchy-guest`?
 - Instalador em bash, idempotente, com `--dry-run`, como o `omarchy-guest`?
 - Dolphin, sddm e plymouth ficam como opcionais ou saem de vez?
 - `sudo` com `secure_path` fura a trava. Vale fechar isso?
