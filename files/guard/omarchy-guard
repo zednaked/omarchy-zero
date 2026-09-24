@@ -1,0 +1,13 @@
+#!/bin/bash
+# zednet: trava de PATH. Fica na frente de $OMARCHY_PATH/bin e fora do checkout,
+# entao um git pull do Omarchy nao a apaga. Cada comando aqui atualiza o Omarchy
+# ou reescreve algo que esta instalacao montou a mao (boot, login, bar, pacman).
+# Caminho seguro: ~/Projetos/omarchy-guest/docs/NO-HOST.md, secao "Updating Omarchy".
+name=$(basename "$0")
+real="${OMARCHY_PATH:-$HOME/.local/share/omarchy}/bin/$name"
+if [[ ${OMARCHY_GUEST_ALLOW:-} == 1 ]]; then exec "$real" "$@"; fi
+[[ $name == omarchy-migrate && ${1:-} == --pending ]] && exit 1
+msg="$name bloqueado no zednet (quebraria a instalacao). Veja docs/NO-HOST.md do omarchy-guest; para forcar: OMARCHY_GUEST_ALLOW=1 $name"
+echo "$msg" >&2
+command -v omarchy-notification-send >/dev/null && omarchy-notification-send -u critical "Bloqueado" "$name - veja docs/NO-HOST.md" >/dev/null 2>&1 || true
+exit 1
