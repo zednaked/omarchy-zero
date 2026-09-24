@@ -51,6 +51,7 @@ Xorg foi cortado depois, e a medição nova ainda está por fazer.
 | terminal e fonte | `foot ttf-jetbrains-mono-nerd` | foot é o padrão deles e o mais leve |
 | som | `pipewire pipewire-pulse wireplumber` | o painel de áudio chama `pactl` e `wpctl` |
 | rede | `networkmanager` | o painel de rede chama `nmcli`. Cuida só do Wi-Fi, e o cabo continua no networkd |
+| desktop | `udiskie wl-clipboard slurp grim hyprpicker brightnessctl hyprsunset less imagemagick` | autostart deles, print, área de transferência, brilho, luz noturna, conta-gotas (varredura em NO-HOST.md) |
 | login | `sddm` + o tema, `plymouth` | tela de login e splash (opcionais) |
 
 Fora de propósito: `ttfx` (screensaver, só no AUR/repo deles), `hypridle`,
@@ -79,7 +80,7 @@ Fora de propósito: `ttfx` (screensaver, só no AUR/repo deles), `hypridle`,
    logind ignorando a tampa e a ociosidade, e `zed.updates` no lugar do
    `omarchy.system-update` na barra.
 8. **Tema sem sessão**: `OMARCHY_THEME_HEADLESS=1 omarchy-theme-set <tema>`.
-9. **Lock**: `omarchy-apply-lock` (root).
+9. **Root, uma vez**: `omarchy-apply-lock` (PAM do lock), `omarchy-guest-apply-browser-policy` e uma cópia do root de `omarchy-dns` em `/usr/bin`. O Omarchy escala privilégio por caminho fixo de pacote. **Nunca** usar symlink para o checkout, e reaplicar a cada update.
 10. **First-run**: `omarchy-done mark first-run-user` depois de conferido,
     porque um first-run que falha se repete e rearma a notificação de update.
 11. **Login**: sddm com `DisplayServer=wayland` num Hyprland mínimo (o
