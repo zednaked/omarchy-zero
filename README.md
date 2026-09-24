@@ -1,124 +1,161 @@
-# omarchy-zero (rascunho, privado)
+# omarchy-zero
 
-Omarchy num Arch comum, instalado do zero, **sem o instalador oficial** e sem
-os ~150 pacotes dele. Entra só o que o shell chama, e cada pacote tem um motivo
-escrito. Nenhum `omarchy update` pode quebrar a instalação.
+The [Omarchy](https://omarchy.org/) shell on a plain Arch install you set up
+yourself: no official installer, no disk takeover, and only the packages the
+shell actually calls.
 
-Este repositório nasceu da instalação do **zednet** em 24/09/2026. É a primeira
-máquina que rodou o Omarchy sem host nenhum. O relato completo está em
-`omarchy-guest/docs/NO-HOST.md` (branch `docs/no-host`), e o log bruto em
-`~/zednet/ACHADOS.md`. Aqui fica **só o que se repete** numa máquina nova.
+Omarchy is an opinionated distribution, and its installer is right to own the
+machine: it takes the disk and the bootloader and brings its full package set,
+and in return everything fits together. This project is for the other case.
+You already have an Arch install you like (or want a minimal one), and you want
+the shell: the bar, the menu, the overlays and the plugin ecosystem around them.
 
-> Estado: rascunho para análise. Ainda não há instalador. `files/` tem os
-> arquivos reais, tirados do zednet, que o instalador vai colocar no lugar.
+It builds on [omarchy-guest](https://github.com/zednaked/omarchy-guest), which
+runs the same shell on top of an existing desktop setup. This repository covers
+the case with no host at all.
 
----
+## The numbers
 
-## Premissa
+Measured on a real install (Intel i7-8750H laptop, systemd-boot), counting
+`pacman -Q` as each layer went in:
 
-- O instalador oficial toma o disco e o bootloader. Aqui o Arch é seu, e o
-  Omarchy entra como um checkout em `~/.local/share/omarchy`, fixado num ref
-  verificado.
-- Pouco pacote, sempre com motivo. No zednet, o desktop completo (som, rede,
-  login, splash e Tailscale) ficou em **526 pacotes**, e 174 deles vieram só do
-  Dolphin. O mínimo que roda o shell é bem menor (tabela abaixo).
-- O dono da atualização é você. O `omarchy-update` e a família dele ficam
-  atrás de uma trava.
-
-## Números do zednet (referência)
-
-| etapa | pacotes (`pacman -Q`) |
-|---|---|
-| `pacstrap` base | 150 |
-| + shell mínimo | 299 |
-| + `jq` | 306 |
-| + som (PipeWire) | +22 |
-| + NetworkManager (só Wi-Fi) | +12 |
-| + plymouth / sddm | +2 / +9 |
-| + dolphin (padrão) | +174 |
-
-Boot: 11,1 s (firmware 4,0, loader 1,0, kernel 1,4, initrd 2,1 e userspace 2,5).
-RAM em repouso: 1198 MB, dos quais 82 MB eram o Xorg da tela de login. Esse
-Xorg foi cortado depois, e a medição nova ainda está por fazer.
-
-## Pacotes, por camada
-
-| camada | pacotes | por quê |
+| layer | packages | added |
 |---|---|---|
-| base | `base linux linux-firmware-<cpu/gpu/rede> <cpu>-ucode e2fsprogs sudo` | firmware só dos fabricantes presentes, não o `linux-firmware` inteiro |
-| shell | `hyprland quickshell uwsm git` | compositor, shell, sessão e checkout |
-| runtime do shell | `gum xdg-terminal-exec qrencode wtype jq gtk3` | `jq` é chamado por 76 comandos do `bin/`; `gtk3` traz o `gtk-launch`, que o launcher usa para abrir **qualquer** app. O doctor não pede nenhum dos dois |
-| terminal e fonte | `foot ttf-jetbrains-mono-nerd` | foot é o padrão deles e o mais leve |
-| som | `pipewire pipewire-pulse wireplumber` | o painel de áudio chama `pactl` e `wpctl` |
-| rede | `networkmanager` | o painel de rede chama `nmcli`. Cuida só do Wi-Fi, e o cabo continua no networkd |
-| desktop | `udiskie wl-clipboard slurp grim hyprpicker brightnessctl hyprsunset less imagemagick` | autostart deles, print, área de transferência, brilho, luz noturna, conta-gotas (varredura em NO-HOST.md) |
-| login | `sddm` + o tema, `plymouth` | tela de login sem Xorg e splash. **Padrão**; `--no-login` / `--no-splash` tiram |
-| arquivos | `dolphin` | gerenciador de arquivos. **Padrão** (decidido em 24/09), apesar do custo de +174 (KDE Frameworks); `--no-dolphin` tira |
+| `pacstrap` base | 150 | |
+| **the shell running** | **299** | **+149** |
+| kitty, installed unasked on first login (`install.sh` now prevents it) | 304 | +5 |
+| `jq`, which the shell needs and nothing asked for | 306 | +2 |
+| sound (PipeWire) | 328 | +22 |
+| NetworkManager | 340 | +12 |
+| login screen (sddm) and boot splash (plymouth) | 351 | +11 |
+| a file manager (Dolphin) | 525 | **+174** |
 
-Fora de propósito: `ttfx` (screensaver, só no AUR/repo deles), `hypridle`,
-`bt-agent`, `fcitx5`, `gsettings-desktop-schemas`, o `config/` inteiro deles
-(chromium, obsidian, opencode…).
+For reference, upstream's `install/omarchy-base.packages` names 151 packages
+*before* dependencies. Here the shell itself costs 149 packages over base, and
+the single most expensive piece of a full desktop is the file manager, because
+Dolphin pulls in KDE Frameworks. `--no-dolphin` leaves it out.
 
-## O que o instalador precisa fazer (ordem)
+Boot on that machine: 11.1 s to the login screen (`systemd-analyze`: firmware
+4.0, loader 1.0, kernel 1.4, initrd 2.1, userspace 2.5).
 
-1. **Checkout** do Omarchy em `~/.local/share/omarchy` no ref verificado:
-   `git clone --depth 1 -b quattro` e depois fetch do SHA. Um bundle feito de
-   clone raso sai incompleto.
-2. **Marcar todas as migrations** em `~/.local/state/omarchy/migrations/`. É o
-   que o finalizer oficial faz numa instalação nova. Sem isso, um clone novo
-   tem 124 pendentes, e uma delas instala o kernel deles no Limine.
-3. **Config de usuário**: copiar só `config/{hypr,omarchy,foot}`, e escrever `~/.config/xdg-terminals.list` com o terminal escolhido. Sem esse arquivo o Omarchy escolhe sozinho e instala o kitty.
-4. **Ambiente**: o pacote deles monta isto via `/usr/share`, e um checkout
-   não tem. São três arquivos em `files/home/`:
-   `~/.config/uwsm/env`, `~/.config/environment.d/60-omarchy.conf` e
-   `~/.bash_profile`.
-5. **Trava** (`files/guard/`): na frente de `$OMARCHY_PATH/bin` no PATH e fora
-   do checkout. São 16 comandos (`update`, `migrate`, `refresh-*`,
-   `reinstall*`…). `OMARCHY_GUEST_ALLOW=1` libera. **Limite aceito (24/09):**
-   o que ela protege é o clique e a chamada por nome. Com `sudo`, o nome nem é
-   encontrado (conferido no zednet: `sudo sh -c 'command -v omarchy-update'` dá
-   vazio, porque o checkout não está no PATH do root). O único furo é
-   `sudo <caminho completo do checkout>`, que é deliberado. Fica documentado e
-   não é fechado.
-6. **Units de usuário** (`files/home/.config/systemd/user/`): as três úteis,
-   com `%h` no lugar de `/usr/bin`.
-7. **Padrões de máquina**: `omarchy.idle` desligado em `disabledPlugins`,
-   logind ignorando a tampa e a ociosidade, e `zed.updates` no lugar do
-   `omarchy.system-update` na barra.
-8. **Tema sem sessão**: `OMARCHY_THEME_HEADLESS=1 omarchy-theme-set <tema>`.
-9. **Root, uma vez**: `omarchy-apply-lock` (PAM do lock), `omarchy-guest-apply-browser-policy` e uma cópia do root de `omarchy-dns` em `/usr/bin`. O Omarchy escala privilégio por caminho fixo de pacote. **Nunca** usar symlink para o checkout, e reaplicar a cada update.
-10. **First-run**: `omarchy-done mark first-run-user` depois de conferido,
-    porque um first-run que falha se repete e rearma a notificação de update.
-11. **Login**: sddm com `DisplayServer=wayland` num Hyprland mínimo (o
-    `default/sddm/hyprland.lua` deles), ou tty1 com `uwsm start`.
-12. **Splash (opcional)**: `plymouth` no `HOOKS` depois de `systemd`, e
-    `splash` no cmdline.
+## Install
 
-## Instalador
+Start from a working Arch install with a user who has `sudo`, then:
 
-**Decidido em 24/09:** um script bash com `--dry-run`, no mesmo estilo do
-omarchy-guest.
-- Roda como usuário e pede `sudo` em cada ação de root, uma de cada vez, para
-  que o `--dry-run` mostre exatamente o que vai rodar como root.
-- Pode rodar de novo sem estragar nada, então também conserta uma máquina que
-  ficou pela metade.
-- Faz backup com data e hora antes de sobrescrever qualquer arquivo.
+    git clone https://github.com/zednaked/omarchy-zero
+    cd omarchy-zero
+    ./install.sh --dry-run     # every action, printed; nothing changes
+    ./install.sh
 
-## Relação com o omarchy-guest
+The installer runs as your user and asks for `sudo` one action at a time, so
+the dry run shows exactly what would run as root. It is safe to run again: each
+step checks before acting, and every file it replaces is copied to
+`<file>.bak.<timestamp>` first. That also makes it the way to repair an install
+that stopped halfway.
 
-O `omarchy-guest` resolve "Omarchy **em cima** de um host" (HyDE etc.). Este
-resolve "Omarchy **sem** host". Muita coisa é compartilhada: trava, doctor,
-contract, migrations, menu.
+| option | effect |
+|---|---|
+| `--no-login` | no sddm; log in on tty1 and run `uwsm start hyprland.desktop` |
+| `--no-splash` | no plymouth |
+| `--no-dolphin` | no file manager |
+| `--server` | never sleep: ignore lid and idle, and turn off the idle plugin |
+| `--split-network` | the cable stays with systemd-networkd; NetworkManager only manages Wi-Fi |
+| `--terminal NAME` | terminal for `xdg-terminals.list` (default `foot`) |
+| `--theme NAME` | Omarchy theme applied without a running session (default `tokyo-night`) |
 
-**Decidido em 24/09: repositório próprio, que usa o omarchy-guest.** O
-instalador daqui baixa o omarchy-guest e chama as peças dele. A regra é: o que
-vale para as duas situações (com host e sem host) vai para o omarchy-guest,
-como a trava do atualizador, as dependências a mais no `doctor` e um
-`bootstrap --minimal`. Aqui fica só o que é exclusivo da máquina sem host: os
-três arquivos de ambiente, a sessão, os padrões de máquina e a ordem de
-instalação.
+What it does, in order:
 
-## Perguntas em aberto
+1. **Packages**, by layer, each with a reason (below).
+2. **Checkouts**: omarchy-guest, and Omarchy itself in `~/.local/share/omarchy`,
+   pinned to the ref omarchy-guest last verified.
+3. **Migrations**: marks every existing migration as done, which is what
+   Omarchy's own installer does at the end of a fresh install. Without it, the
+   first update runs the entire history, and one migration installs Omarchy's
+   kernel as the first Limine entry.
+4. **User config**: copies `hypr`, `omarchy` and `foot` from the checkout if you
+   don't have them, and writes `xdg-terminals.list`. Without that file Omarchy
+   picks a terminal itself and installs kitty to do it.
+5. **Environment**: the three files the Omarchy package would normally provide
+   through `/usr/share` (`uwsm/env`, `environment.d`, a block in `.bash_profile`).
+6. **Update guard** (see Updating).
+7. **User units**: crash watch, sleep lock and internal-monitor recovery.
+8. **omarchy-guest install**: its plugins and menu overrides.
+9. **System services**, **login screen** and **boot splash**, with Omarchy's
+   own sddm and plymouth themes from the checkout, so nothing comes from the
+   AUR. A custom splash theme you already set is left alone.
+10. **Theme** and the root-once helper `omarchy-apply-lock`, which writes the
+    lock screen's PAM file.
 
-- Tema do sddm: o astronaut é AUR. Usar o tema do próprio Omarchy
-  (`default/sddm/omarchy`), que vem no checkout?
+Two things stay manual on purpose: adding `splash` to the kernel command line
+(that is your bootloader), and `omarchy-done mark first-run-user` once the
+first login works. A first run that fails repeats on every login and re-arms
+the update notification.
+
+## Packages, by layer
+
+| layer | packages | why |
+|---|---|---|
+| shell | `hyprland quickshell uwsm git` | compositor, shell, session, checkout |
+| what the shell calls | `gum xdg-terminal-exec qrencode wtype jq gtk3` | `jq` is called by 76 commands in Omarchy's `bin/`; `gtk3` provides `gtk-launch`, which the launcher uses to open any app |
+| terminal and font | `foot ttf-jetbrains-mono-nerd` | foot is the lightest terminal Omarchy supports |
+| sound | `pipewire pipewire-pulse wireplumber` | the audio panel calls `pactl` and `wpctl` |
+| network | `networkmanager` | the network panel calls `nmcli` |
+| desktop | `udiskie wl-clipboard slurp grim hyprpicker brightnessctl hyprsunset less imagemagick` | autostart, screenshots, clipboard, brightness, night light, color picker |
+| login, splash | `sddm`, `plymouth` | on by default; `--no-login`, `--no-splash` |
+| files | `dolphin` | on by default; `--no-dolphin` |
+
+Left out on purpose: the screensaver (`ttfx` exists only in the AUR and in
+Omarchy's own repository), `hypridle`, `fcitx5`, and Omarchy's app configs
+(Chromium, Obsidian and others). Install what you use.
+
+## Updating
+
+This install does not run `omarchy-update`. That command pulls, runs migrations
+and refreshes config, boot, login and pacman settings, and on this install
+several of those are yours.
+
+The **guard** is a directory of symlinks placed ahead of Omarchy's `bin/` on
+PATH and outside the checkout, so a `git pull` cannot remove it. It covers 16
+commands (`omarchy-update`, `omarchy-migrate`, and the `refresh-*` and
+`reinstall*` families, among others). Each one explains why it stopped and
+sends a notification. `OMARCHY_GUEST_ALLOW=1 <command>` lets a call through.
+
+Its limit, accepted on purpose: it protects against clicks and calls by name.
+`sudo` resets PATH, so a root call with the full path into the checkout goes
+through. Nothing in the session does that.
+
+To update Omarchy by hand, with omarchy-guest's tools:
+
+    cd ~/.local/share/omarchy && git fetch origin quattro
+    omarchy-guest-contract --ref origin/quattro --commits   # what would break
+    omarchy-guest-migrations --ref origin/quattro           # what would run, classified
+    git merge --ff-only origin/quattro
+    omarchy-guest-migrations --apply-policy
+    OMARCHY_GUEST_ALLOW=1 omarchy-migrate
+    omarchy-guest doctor
+
+`pacman -Syu` is safe: no Omarchy repository is added to `pacman.conf`.
+
+## Relation to omarchy-guest
+
+[omarchy-guest](https://github.com/zednaked/omarchy-guest) solves the Omarchy
+shell **on top of** a host (another Hyprland config manager, for example). This
+solves the Omarchy shell **with no host**. Anything that applies to both cases
+(the guard, the doctor, the upstream contract, migration policy, menu
+overrides) belongs there. This repository keeps only what is specific to a
+machine with no host: the environment files, the session and the install order.
+
+The full account of the first install, including everything that broke and what
+the doctor did not see, is in omarchy-guest's
+[`docs/NO-HOST.md`](https://github.com/zednaked/omarchy-guest/blob/main/docs/NO-HOST.md).
+
+## Status
+
+Version 0.1.0, tested on one machine. That install was done by hand, step by
+step, before this script existed, and the script's dry run against it reports
+every step as already done or as an equivalent file. A run on a second, fresh
+machine has not happened yet. Reports are welcome.
+
+## License
+
+MIT

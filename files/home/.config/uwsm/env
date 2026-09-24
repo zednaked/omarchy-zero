@@ -1,5 +1,6 @@
-# zednet: Omarchy como checkout em ~/.local/share/omarchy, sem pacote.
-# O 10-omarchy deles procura o env-bootstrap em /usr/share/omarchy, que aqui nao existe.
+# omarchy-zero: Omarchy runs from a checkout in ~/.local/share/omarchy, not a
+# package. Their 10-omarchy looks for its bootstrap in /usr/share/omarchy, which
+# does not exist here, so this sets the same environment directly.
 export OMARCHY_PATH="$HOME/.local/share/omarchy"
 export PATH="$HOME/.local/share/omarchy-guest/guard/bin:$OMARCHY_PATH/bin:$HOME/.local/bin:$PATH"
 . "$OMARCHY_PATH/default/uwsm/env.d/10-omarchy"
