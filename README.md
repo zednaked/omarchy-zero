@@ -47,7 +47,7 @@ Xorg foi cortado depois, e a medição nova ainda está por fazer.
 |---|---|---|
 | base | `base linux linux-firmware-<cpu/gpu/rede> <cpu>-ucode e2fsprogs sudo` | firmware só dos fabricantes presentes, não o `linux-firmware` inteiro |
 | shell | `hyprland quickshell uwsm git` | compositor, shell, sessão e checkout |
-| runtime do shell | `gum xdg-terminal-exec qrencode wtype jq` | `jq` é chamado por 76 comandos do `bin/` e o doctor não pede |
+| runtime do shell | `gum xdg-terminal-exec qrencode wtype jq gtk3` | `jq` é chamado por 76 comandos do `bin/`; `gtk3` traz o `gtk-launch`, que o launcher usa para abrir **qualquer** app. O doctor não pede nenhum dos dois |
 | terminal e fonte | `foot ttf-jetbrains-mono-nerd` | foot é o padrão deles e o mais leve |
 | som | `pipewire pipewire-pulse wireplumber` | o painel de áudio chama `pactl` e `wpctl` |
 | rede | `networkmanager` | o painel de rede chama `nmcli`. Cuida só do Wi-Fi, e o cabo continua no networkd |
@@ -65,7 +65,7 @@ Fora de propósito: `ttfx` (screensaver, só no AUR/repo deles), `hypridle`,
 2. **Marcar todas as migrations** em `~/.local/state/omarchy/migrations/`. É o
    que o finalizer oficial faz numa instalação nova. Sem isso, um clone novo
    tem 124 pendentes, e uma delas instala o kernel deles no Limine.
-3. **Config de usuário**: copiar só `config/{hypr,omarchy,foot}`.
+3. **Config de usuário**: copiar só `config/{hypr,omarchy,foot}`, e escrever `~/.config/xdg-terminals.list` com o terminal escolhido. Sem esse arquivo o Omarchy escolhe sozinho e instala o kitty.
 4. **Ambiente**: o pacote deles monta isto via `/usr/share`, e um checkout
    não tem. São três arquivos em `files/home/`:
    `~/.config/uwsm/env`, `~/.config/environment.d/60-omarchy.conf` e
