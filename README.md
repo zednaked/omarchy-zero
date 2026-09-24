@@ -74,7 +74,12 @@ Fora de propósito: `ttfx` (screensaver, só no AUR/repo deles), `hypridle`,
    `~/.bash_profile`.
 5. **Trava** (`files/guard/`): na frente de `$OMARCHY_PATH/bin` no PATH e fora
    do checkout. São 16 comandos (`update`, `migrate`, `refresh-*`,
-   `reinstall*`…). `OMARCHY_GUEST_ALLOW=1` libera.
+   `reinstall*`…). `OMARCHY_GUEST_ALLOW=1` libera. **Limite aceito (24/09):**
+   o que ela protege é o clique e a chamada por nome. Com `sudo`, o nome nem é
+   encontrado (conferido no zednet: `sudo sh -c 'command -v omarchy-update'` dá
+   vazio, porque o checkout não está no PATH do root). O único furo é
+   `sudo <caminho completo do checkout>`, que é deliberado. Fica documentado e
+   não é fechado.
 6. **Units de usuário** (`files/home/.config/systemd/user/`): as três úteis,
    com `%h` no lugar de `/usr/bin`.
 7. **Padrões de máquina**: `omarchy.idle` desligado em `disabledPlugins`,
@@ -115,6 +120,5 @@ instalação.
 
 ## Perguntas em aberto
 
-- `sudo` com `secure_path` fura a trava. Vale fechar isso?
 - Tema do sddm: o astronaut é AUR. Usar o tema do próprio Omarchy
   (`default/sddm/omarchy`), que vem no checkout?
