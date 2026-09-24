@@ -35,7 +35,7 @@ máquina que rodou o Omarchy sem host nenhum. O relato completo está em
 | + som (PipeWire) | +22 |
 | + NetworkManager (só Wi-Fi) | +12 |
 | + plymouth / sddm | +2 / +9 |
-| + dolphin (opcional) | +174 |
+| + dolphin (padrão) | +174 |
 
 Boot: 11,1 s (firmware 4,0, loader 1,0, kernel 1,4, initrd 2,1 e userspace 2,5).
 RAM em repouso: 1198 MB, dos quais 82 MB eram o Xorg da tela de login. Esse
@@ -52,7 +52,8 @@ Xorg foi cortado depois, e a medição nova ainda está por fazer.
 | som | `pipewire pipewire-pulse wireplumber` | o painel de áudio chama `pactl` e `wpctl` |
 | rede | `networkmanager` | o painel de rede chama `nmcli`. Cuida só do Wi-Fi, e o cabo continua no networkd |
 | desktop | `udiskie wl-clipboard slurp grim hyprpicker brightnessctl hyprsunset less imagemagick` | autostart deles, print, área de transferência, brilho, luz noturna, conta-gotas (varredura em NO-HOST.md) |
-| login | `sddm` + o tema, `plymouth` | tela de login e splash (opcionais) |
+| login | `sddm` + o tema, `plymouth` | tela de login sem Xorg e splash. **Padrão**; `--no-login` / `--no-splash` tiram |
+| arquivos | `dolphin` | gerenciador de arquivos. **Padrão** (decidido em 24/09), apesar do custo de +174 (KDE Frameworks); `--no-dolphin` tira |
 
 Fora de propósito: `ttfx` (screensaver, só no AUR/repo deles), `hypridle`,
 `bt-agent`, `fcitx5`, `gsettings-desktop-schemas`, o `config/` inteiro deles
@@ -114,7 +115,6 @@ instalação.
 
 ## Perguntas em aberto
 
-- Dolphin, sddm e plymouth ficam como opcionais ou saem de vez?
 - `sudo` com `secure_path` fura a trava. Vale fechar isso?
 - Tema do sddm: o astronaut é AUR. Usar o tema do próprio Omarchy
   (`default/sddm/omarchy`), que vem no checkout?
