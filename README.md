@@ -79,7 +79,8 @@ What it does, in order:
    through `/usr/share` (`uwsm/env`, `environment.d`, a block in `.bash_profile`).
 6. **Update guard** (see Updating).
 7. **User units**: crash watch, sleep lock and internal-monitor recovery.
-8. **omarchy-guest install**: its plugins and menu overrides.
+8. **omarchy-guest install**: its plugins and menu overrides, and its commands
+   (`omarchy-guest`, `omarchy-guest-update`, ...) linked into `~/.local/bin`.
 9. **System services**, **login screen** and **boot splash**, with Omarchy's
    own sddm and plymouth themes from the checkout, so nothing comes from the
    AUR. A custom splash theme you already set is left alone.
@@ -128,9 +129,12 @@ To update Omarchy, pull omarchy-guest first (its contract and migration policy
 are what decide), then let `omarchy-guest update` walk the gates:
 
     git -C ~/.local/src/omarchy-guest pull --ff-only
-    ~/.local/src/omarchy-guest/bin/omarchy-guest update           # read-only: contract, migrations, verdict
-    ~/.local/src/omarchy-guest/bin/omarchy-guest update --apply   # in a terminal: pull, migrations, shell restart, doctor
-    ~/.local/src/omarchy-guest/bin/omarchy-guest update --rollback  # if the shell did not come back
+    omarchy-guest update              # read-only: contract, migrations, verdict
+    omarchy-guest update --apply      # in a terminal: pull, migrations, shell restart, doctor
+    omarchy-guest update --rollback   # if the shell did not come back
+
+On a machine installed before the commands were linked, run
+`omarchy-guest install` once from `~/.local/src/omarchy-guest/bin/` first.
 
 `--apply` refuses to start while any gate is closed: a break in the contract, a
 migration with no policy, or migrations that call `sudo` without a TTY. It calls
