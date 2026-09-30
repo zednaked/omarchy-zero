@@ -124,15 +124,18 @@ Its limit, accepted on purpose: it protects against clicks and calls by name.
 `sudo` resets PATH, so a root call with the full path into the checkout goes
 through. Nothing in the session does that.
 
-To update Omarchy by hand, with omarchy-guest's tools:
+To update Omarchy, pull omarchy-guest first (its contract and migration policy
+are what decide), then let `omarchy-guest update` walk the gates:
 
-    cd ~/.local/share/omarchy && git fetch origin quattro
-    omarchy-guest-contract --ref origin/quattro --commits   # what would break
-    omarchy-guest-migrations --ref origin/quattro           # what would run, classified
-    git merge --ff-only origin/quattro
-    omarchy-guest-migrations --apply-policy
-    OMARCHY_GUEST_ALLOW=1 omarchy-migrate
-    omarchy-guest doctor
+    git -C ~/.local/src/omarchy-guest pull --ff-only
+    ~/.local/src/omarchy-guest/bin/omarchy-guest update           # read-only: contract, migrations, verdict
+    ~/.local/src/omarchy-guest/bin/omarchy-guest update --apply   # in a terminal: pull, migrations, shell restart, doctor
+    ~/.local/src/omarchy-guest/bin/omarchy-guest update --rollback  # if the shell did not come back
+
+`--apply` refuses to start while any gate is closed: a break in the contract, a
+migration with no policy, or migrations that call `sudo` without a TTY. It calls
+the real `omarchy-migrate` from the checkout, not through the guard, and only
+after the policy has marked what this install skips.
 
 `pacman -Syu` is safe: no Omarchy repository is added to `pacman.conf`.
 
