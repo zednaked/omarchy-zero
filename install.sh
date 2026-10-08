@@ -164,6 +164,23 @@ for d in hypr omarchy foot; do
   if [[ -e $HOME/.config/$d ]]; then ok "~/.config/$d exists, left alone"
   else run cp -r "$OMARCHY_DIR/config/$d" "$HOME/.config/$d"; ((DRY)) || ok "~/.config/$d"; fi
 done
+# Omarchy's boot-time cursor (default/hypr/startup-cursor.lua, 07/10/2026) swaps
+# in a one-image theme until the shell is up. With Hyprland 0.56.2 on a 1.5
+# scale it aborts the compositor at login, at 24px and at 40px alike (measured
+# 08/10/2026), dropping to safe mode with no shell. Their gate is
+# `omarchy_startup_cursor_pending == nil`; setting it false before their
+# defaults load closes it, on new and existing configs alike.
+HL="$HOME/.config/hypr/hyprland.lua"
+if [[ -f $HL ]] && ! grep -q '^omarchy_startup_cursor_pending = false' "$HL"; then
+  if ((DRY)); then note "would disable the boot-time cursor in $HL"
+  else
+    cp "$HL" "$HL.bak.$(date +%s)"
+    sed -i '0,/^require("default.hypr.omarchy")/s//-- omarchy-zero: the boot-time cursor crashes Hyprland 0.56.2 at login, see install.sh\nomarchy_startup_cursor_pending = false\n&/' "$HL"
+    ok "boot-time cursor disabled in ~/.config/hypr/hyprland.lua"
+  fi
+else
+  ok "boot-time cursor already disabled"
+fi
 # Without this file Omarchy picks a terminal itself, and installs kitty to do it.
 if [[ -e $HOME/.config/xdg-terminals.list ]] && ((!TERMINAL_SET)); then
   ok "~/.config/xdg-terminals.list exists, left alone (--terminal NAME overrides)"
