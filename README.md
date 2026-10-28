@@ -116,7 +116,7 @@ and refreshes config, boot, login and pacman settings, and on this install
 several of those are yours.
 
 The **guard** is a directory of symlinks placed ahead of Omarchy's `bin/` on
-PATH and outside the checkout, so a `git pull` cannot remove it. It covers 16
+PATH and outside the checkout, so a `git pull` cannot remove it. It covers 17
 commands (`omarchy-update`, `omarchy-migrate`, and the `refresh-*` and
 `reinstall*` families, among others). Each one explains why it stopped and
 sends a notification. `OMARCHY_GUEST_ALLOW=1 <command>` lets a call through.
